@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign Up - AI Document Summariser</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,#0a1628 0%, #1a2f4a 50%, #0d1b2e 100%);
+      background-attachment: fixed;
+      color:#e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+      position: relative;
+      overflow-x: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(107, 184, 255, 0.03) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(123, 92, 255, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: shimmer 20s ease-in-out infinite;
+    }
+    @keyframes shimmer {0%,100%{opacity:1;transform:scale(1);}50%{opacity:.8;transform:scale(1.05);}}
+    .container{max-width:480px;width:100%;position:relative;z-index:1;animation:floatIn 600ms ease both;}
+    .auth-card{
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      backdrop-filter: blur(20px);
+      border-radius:20px;
+      padding:40px;
+      box-shadow:0 20px 60px rgba(2,8,20,0.7),0 0 0 1px rgba(255,255,255,0.06),inset 0 1px 0 rgba(255,255,255,0.1);
+      border:1px solid rgba(255,255,255,0.05);
+      overflow:hidden;
+      position:relative;
+    }
+    .auth-card::before{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(45deg,transparent,rgba(255,255,255,0.03),transparent);
+      animation:sweep 8s linear infinite;
+    }
+    @keyframes sweep{0%{transform:translateX(-100%) translateY(-100%) rotate(45deg);}100%{transform:translateX(100%) translateY(100%) rotate(45deg);}}
+    .logo{text-align:center;margin-bottom:32px;position:relative;z-index:1;}
+    .logo h1{
+      font-size:32px;color:#fff;font-weight:700;letter-spacing:-0.8px;
+      background:linear-gradient(135deg,#fff 0%,#a5d4ff 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .logo p{color:rgba(230,238,248,0.75);font-size:14px;}
+    label{display:block;color:rgba(230,238,248,0.9);font-size:14px;font-weight:600;margin-bottom:8px;}
+    .form-group{margin-bottom:24px;}
+    input{
+      width:100%;padding:14px 16px;border-radius:12px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:linear-gradient(135deg,rgba(0,0,0,0.15),rgba(0,0,0,0.1));
+      color:#e9f5ff;font-size:15px;outline:none;transition:.3s;
+    }
+    input:focus{
+      border-color:rgba(107,184,255,0.4);
+      background:linear-gradient(135deg,rgba(0,0,0,0.2),rgba(0,0,0,0.15));
+      box-shadow:0 0 0 3px rgba(107,184,255,0.1);
+    }
+    .btn{
+      width:100%;padding:16px;border-radius:12px;border:0;
+      font-weight:700;font-size:15px;color:#fff;cursor:pointer;
+      background:linear-gradient(135deg,#6bb8ff 0%,#7b5cff 100%);
+      box-shadow:0 8px 24px rgba(107,184,255,0.25);
+    }
+    .footer-link{text-align:center;margin-top:24px;color:rgba(230,238,248,0.7);font-size:14px;}
+    .footer-link a{color:#6bb8ff;text-decoration:none;font-weight:600;}
+    .error-message{color:#ff6b6b;font-size:13px;margin-top:6px;display:none;}
+    .error-message.show{display:block;}
+    .success-message{background:rgba(107,184,255,0.15);border:1px solid rgba(107,184,255,0.3);padding:14px;margin-bottom:20px;color:#a5d4ff;font-size:14px;text-align:center;border-radius:10px;display:none;}
+    .success-message.show{display:block;}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+    @keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <div class="auth-card">
+    <div class="logo">
+      <h1>AI Document Summariser</h1>
+      <p>Create your account</p>
+    </div>
+
+    <div id="successMessage" class="success-message"></div>
+
+    <form id="signupForm">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="name" required>
+        <div id="nameError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" required>
+        <div id="emailError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Password (4 digits)</label>
+        <input type="password" id="password" maxlength="4" required>
+        <div id="passwordError" class="error-message"></div>
+      </div>
+
+      <button id="signupBtn" class="btn">
+        <span id="btnText">Create Account</span>
+      </button>
+    </form>
+
+    <div class="footer-link">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('signupForm');
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const signupBtn = document.getElementById('signupBtn');
+const btnText = document.getElementById('btnText');
+const successMessage = document.getElementById('successMessage');
+
+const nameError = document.getElementById('nameError');
+const emailError = document.getElementById('emailError');
+const passwordError = document.getElementById('passwordError');
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function showError(el, msg){ el.textContent=msg; el.classList.add('show'); }
+function hideError(el){ el.classList.remove('show'); }
+
+function validateForm(){
+  let ok=true;
+  hideError(nameError); hideError(emailError); hideError(passwordError);
+
+  if(nameInput.value.trim().length < 2){ showError(nameError,"Name must be at least 2 characters"); ok=false; }
+  if(!emailRegex.test(emailInput.value.trim())){ showError(emailError,"Invalid email"); ok=false; }
+  if(!/^\d{4}$/.test(passwordInput.value)){ showError(passwordError,"Password must be exactly 4 digits"); ok=false; }
+
+  return ok;
+}
+
+form.addEventListener('submit', async(e)=>{
+  e.preventDefault();
+  if(!validateForm()) return;
+
+  signupBtn.disabled=true;
+  btnText.innerHTML='<span class="spinner"></span> Creating...';
+
+  const body={
+    name:nameInput.value.trim(),
+    email:emailInput.value.trim(),
+    password:passwordInput.value.trim()
+  };
+
+  try {
+    const r=await fetch('/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await r.json();
+
+    if(data.ok){
+      successMessage.textContent="Account created! Redirecting...";
+      successMessage.classList.add('show');
+      setTimeout(()=>{ window.location.href="/"; },1500);
+    } else {
+      showError(emailError,data.error||"Signup failed");
+      signupBtn.disabled=false;
+      btnText.textContent="Create Account";
+    }
+  } catch(err){
+    showError(nameError,"Error occurred");
+    signupBtn.disabled=false;
+    btnText.textContent="Create Account";
+  }
+});
+</script>
+
+</body>
+</html>

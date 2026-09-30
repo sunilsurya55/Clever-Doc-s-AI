@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - AI Document Summariser</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Inter, system-ui, -apple-system;
+      background: linear-gradient(135deg,#0a1628,#1a2f4a,#0d1b2e);
+      background-attachment: fixed;
+      color:#e6eef8;
+      display:flex;align-items:center;justify-content:center;
+      padding:28px;min-height:100vh;
+    }
+    body::before{
+      content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+      background:radial-gradient(circle at 20% 50%,rgba(107,184,255,.03),transparent 50%),
+                 radial-gradient(circle at 80% 80%,rgba(123,92,255,.03),transparent 50%);
+      z-index:0;animation:shimmer 20s infinite ease-in-out;
+    }
+    @keyframes shimmer{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.8;transform:scale(1.05);}}
+    .container{max-width:480px;width:100%;z-index:1;animation:floatIn .6s both;}
+    .auth-card{
+      background:rgba(255,255,255,.03);backdrop-filter:blur(20px);
+      border-radius:20px;padding:40px;position:relative;
+      border:1px solid rgba(255,255,255,.05);
+      box-shadow:0 20px 60px rgba(2,8,20,.7);
+      overflow:hidden;
+    }
+    .auth-card::before{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(45deg,transparent,rgba(255,255,255,.03),transparent);
+      animation:sweep 8s linear infinite;
+    }
+    @keyframes sweep{0%{transform:translate(-100%,-100%) rotate(45deg);}
+                     100%{transform:translate(100%,100%) rotate(45deg);}}
+    label{display:block;margin-bottom:8px;color:rgba(230,238,248,.9);font-size:14px;font-weight:600;}
+    input{
+      width:100%;padding:14px 16px;border-radius:12px;
+      background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.08);
+      color:#e9f5ff;font-size:15px;outline:none;transition:.3s;
+    }
+    input:focus{
+      border-color:rgba(107,184,255,.4);background:rgba(0,0,0,.2);
+      box-shadow:0 0 0 3px rgba(107,184,255,.1);
+    }
+    .btn{
+      width:100%;padding:16px;border-radius:12px;border:0;cursor:pointer;
+      font-weight:700;font-size:15px;color:#fff;
+      background:linear-gradient(135deg,#6bb8ff,#7b5cff);
+      margin-top:10px;
+    }
+    .error-message{color:#ff6b6b;font-size:13px;margin-top:6px;display:none;}
+    .error-message.show{display:block;}
+    .footer-link{text-align:center;margin-top:24px;color:rgba(230,238,248,.7);font-size:14px;}
+    .footer-link a{color:#6bb8ff;font-weight:600;text-decoration:none;}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s infinite linear;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <div class="auth-card">
+
+    <div class="logo" style="text-align:center;margin-bottom:32px;">
+      <h1 style="
+        font-size:32px;
+        background:linear-gradient(135deg,#fff,#a5d4ff);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        AI Document Summariser
+      </h1>
+      <p style="color:rgba(230,238,248,.75);font-size:14px;">Sign in to your account</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" required>
+        <div id="emailError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" maxlength="4" required>
+        <div id="passwordError" class="error-message"></div>
+      </div>
+
+      <button id="loginBtn" class="btn">
+        <span id="btnText">Sign In</span>
+      </button>
+    </form>
+
+    <div class="footer-link">
+      Don't have an account? <a href="/signup">Sign up</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const form=document.getElementById('loginForm');
+const email=document.getElementById('email');
+const password=document.getElementById('password');
+const emailErr=document.getElementById('emailError');
+const passErr=document.getElementById('passwordError');
+const loginBtn=document.getElementById('loginBtn');
+const btnText=document.getElementById('btnText');
+
+function showError(el,msg){el.textContent=msg;el.classList.add('show');}
+function hideError(el){el.classList.remove('show');}
+
+form.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  hideError(emailErr); hideError(passErr);
+
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){
+    showError(emailErr,"Invalid email");
+    return;
+  }
+  if(!/^\d{4}$/.test(password.value)){
+    showError(passErr,"Password must be 4 digits");
+    return;
+  }
+
+  loginBtn.disabled=true;
+  btnText.innerHTML='<span class="spinner"></span> Signing in...';
+
+  const body={email:email.value.trim(),password:password.value.trim()};
+
+  try{
+    const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await r.json();
+
+    if(data.ok){
+      if(data.token) localStorage.setItem('auth_token',data.token);
+      window.location.href="/";
+    } else {
+      showError(passErr,data.error||"Invalid credentials");
+      loginBtn.disabled=false;
+      btnText.textContent="Sign In";
+    }
+
+  } catch(e){
+    showError(passErr,"Error occurred");
+    loginBtn.disabled=false;
+    btnText.textContent="Sign In";
+  }
+});
+</script>
+
+</body>
+</html>
